@@ -1,5 +1,5 @@
-from .constants import RotationType, Axis
 from .auxiliary_methods import intersect, set_to_decimal
+from .constants import Axis, RotationType
 
 DEFAULT_NUMBER_OF_DECIMALS = 3
 START_POSITION = [0, 0, 0]
@@ -24,15 +24,13 @@ class Item:
         self.number_of_decimals = number_of_decimals
 
     def string(self):
-        return "%s(%sx%sx%s, weight: %s) pos(%s) rt(%s) vol(%s)" % (
-            self.name, self.width, self.height, self.depth, self.weight,
-            self.position, self.rotation_type, self.get_volume()
+        return (
+            f"{self.name}({self.width}x{self.height}x{self.depth}, weight: {self.weight})"
+            f" pos({self.position}) rt({self.rotation_type}) vol({self.get_volume()})"
         )
 
     def get_volume(self):
-        return set_to_decimal(
-            self.width * self.height * self.depth, self.number_of_decimals
-        )
+        return set_to_decimal(self.width * self.height * self.depth, self.number_of_decimals)
 
     def get_dimension(self):
         if self.rotation_type == RotationType.RT_WHD:
@@ -72,15 +70,13 @@ class Bin:
         self.number_of_decimals = number_of_decimals
 
     def string(self):
-        return "%s(%sx%sx%s, max_weight:%s) vol(%s)" % (
-            self.name, self.width, self.height, self.depth, self.max_weight,
-            self.get_volume()
+        return (
+            f"{self.name}({self.width}x{self.height}x{self.depth},"
+            f" max_weight:{self.max_weight}) vol({self.get_volume()})"
         )
 
     def get_volume(self):
-        return set_to_decimal(
-            self.width * self.height * self.depth, self.number_of_decimals
-        )
+        return set_to_decimal(self.width * self.height * self.depth, self.number_of_decimals)
 
     def get_total_weight(self):
         total_weight = 0
@@ -99,9 +95,9 @@ class Bin:
             item.rotation_type = i
             dimension = item.get_dimension()
             if (
-                self.width < pivot[0] + dimension[0] or
-                self.height < pivot[1] + dimension[1] or
-                self.depth < pivot[2] + dimension[2]
+                self.width < pivot[0] + dimension[0]
+                or self.height < pivot[1] + dimension[1]
+                or self.depth < pivot[2] + dimension[2]
             ):
                 continue
 
@@ -163,23 +159,11 @@ class Packer:
                 pivot = [0, 0, 0]
                 w, h, d = ib.get_dimension()
                 if axis == Axis.WIDTH:
-                    pivot = [
-                        ib.position[0] + w,
-                        ib.position[1],
-                        ib.position[2]
-                    ]
+                    pivot = [ib.position[0] + w, ib.position[1], ib.position[2]]
                 elif axis == Axis.HEIGHT:
-                    pivot = [
-                        ib.position[0],
-                        ib.position[1] + h,
-                        ib.position[2]
-                    ]
+                    pivot = [ib.position[0], ib.position[1] + h, ib.position[2]]
                 elif axis == Axis.DEPTH:
-                    pivot = [
-                        ib.position[0],
-                        ib.position[1],
-                        ib.position[2] + d
-                    ]
+                    pivot = [ib.position[0], ib.position[1], ib.position[2] + d]
 
                 if bin.put_item(item, pivot):
                     fitted = True
@@ -191,8 +175,10 @@ class Packer:
             bin.unfitted_items.append(item)
 
     def pack(
-        self, bigger_first=False, distribute_items=False,
-        number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS
+        self,
+        bigger_first=False,
+        distribute_items=False,
+        number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
     ):
         for bin in self.bins:
             bin.format_numbers(number_of_decimals)
@@ -200,12 +186,8 @@ class Packer:
         for item in self.items:
             item.format_numbers(number_of_decimals)
 
-        self.bins.sort(
-            key=lambda bin: bin.get_volume(), reverse=bigger_first
-        )
-        self.items.sort(
-            key=lambda item: item.get_volume(), reverse=bigger_first
-        )
+        self.bins.sort(key=lambda bin: bin.get_volume(), reverse=bigger_first)
+        self.items.sort(key=lambda item: item.get_volume(), reverse=bigger_first)
 
         for bin in self.bins:
             for item in self.items:

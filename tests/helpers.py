@@ -29,8 +29,7 @@ def intervals_overlap(start_a, size_a, start_b, size_b):
 def boxes_overlap(position_a, size_a, position_b, size_b):
     """True when two axis aligned boxes share volume."""
     return all(
-        intervals_overlap(position_a[axis], size_a[axis],
-                          position_b[axis], size_b[axis])
+        intervals_overlap(position_a[axis], size_a[axis], position_b[axis], size_b[axis])
         for axis in AXES
     )
 
@@ -63,8 +62,7 @@ def find_bin(packer, name):
         if container.name == name:
             return container
 
-    raise AssertionError("no bin named %r in %r" % (
-        name, [b.name for b in packer.bins]))
+    raise AssertionError(f"no bin named {name!r} in {[b.name for b in packer.bins]!r}")
 
 
 def placed_names(container):
@@ -82,13 +80,13 @@ def assert_item_inside_bin(item, container):
 
     for axis in AXES:
         assert item.position[axis] >= 0, (
-            "item %r starts at %s on the %s axis, before the bin origin"
-            % (item.name, item.position[axis], AXIS_NAMES[axis])
+            f"item {item.name!r} starts at {item.position[axis]} on the"
+            f" {AXIS_NAMES[axis]} axis, before the bin origin"
         )
         assert item.position[axis] + size[axis] <= limits[axis], (
-            "item %r spans %s to %s on the %s axis of bin %r, which ends at %s"
-            % (item.name, item.position[axis], item.position[axis] + size[axis],
-               AXIS_NAMES[axis], container.name, limits[axis])
+            f"item {item.name!r} spans {item.position[axis]} to"
+            f" {item.position[axis] + size[axis]} on the {AXIS_NAMES[axis]} axis"
+            f" of bin {container.name!r}, which ends at {limits[axis]}"
         )
 
 
@@ -101,12 +99,11 @@ def assert_no_overlaps(container):
             a = items[first]
             b = items[second]
             assert not boxes_overlap(
-                a.position, a.get_dimension(),
-                b.position, b.get_dimension()
+                a.position, a.get_dimension(), b.position, b.get_dimension()
             ), (
-                "items %r at %s size %s and %r at %s size %s overlap in bin %r"
-                % (a.name, list(a.position), a.get_dimension(),
-                   b.name, list(b.position), b.get_dimension(), container.name)
+                f"items {a.name!r} at {list(a.position)} size {a.get_dimension()}"
+                f" and {b.name!r} at {list(b.position)} size {b.get_dimension()}"
+                f" overlap in bin {container.name!r}"
             )
 
 
@@ -117,8 +114,7 @@ def assert_weight_within_limit(container):
         total += item.weight
 
     assert total <= container.max_weight, (
-        "bin %r holds %s of weight but its limit is %s"
-        % (container.name, total, container.max_weight)
+        f"bin {container.name!r} holds {total} of weight but its limit is {container.max_weight}"
     )
 
 
@@ -130,21 +126,19 @@ def assert_every_item_accounted_for(container, all_items):
     expected = sorted(item.name for item in all_items)
 
     assert len(set(placed)) == len(placed), (
-        "bin %r lists a placed item more than once: %s"
-        % (container.name, placed))
+        f"bin {container.name!r} lists a placed item more than once: {placed}"
+    )
     assert len(set(unfitted)) == len(unfitted), (
-        "bin %r lists an unfitted item more than once: %s"
-        % (container.name, unfitted))
+        f"bin {container.name!r} lists an unfitted item more than once: {unfitted}"
+    )
 
     both = sorted(set(placed) & set(unfitted))
-    assert not both, (
-        "items %s are both placed in and unfitted for bin %r"
-        % (both, container.name))
+    assert not both, f"items {both} are both placed in and unfitted for bin {container.name!r}"
 
     seen = sorted(placed + unfitted)
     assert seen == expected, (
-        "bin %r accounts for %s but the packer was given %s"
-        % (container.name, seen, expected))
+        f"bin {container.name!r} accounts for {seen} but the packer was given {expected}"
+    )
 
 
 def assert_bin_invariants(container, all_items):
@@ -164,7 +158,8 @@ def assert_position(item, expected):
 
     for axis in AXES:
         assert actual[axis] == expected[axis], (
-            "item %r sits at %s, expected %s" % (item.name, actual, expected))
+            f"item {item.name!r} sits at {actual}, expected {expected}"
+        )
 
 
 def assert_dimension(item, expected):
@@ -175,4 +170,5 @@ def assert_dimension(item, expected):
 
     for axis in AXES:
         assert actual[axis] == expected[axis], (
-            "item %r measures %s, expected %s" % (item.name, actual, expected))
+            f"item {item.name!r} measures {actual}, expected {expected}"
+        )
