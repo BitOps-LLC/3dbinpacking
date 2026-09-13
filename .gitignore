@@ -4,3 +4,7 @@ dist
 *.egg-info
 .pypirc
 .vscode
+.venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
