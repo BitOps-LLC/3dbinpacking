@@ -104,8 +104,10 @@ pre-commit install
 Every commit then runs [pre-commit](https://pre-commit.com) automatically:
 ruff (lint with autofix, plus formatting), the pytest suite, and basic
 hygiene checks (trailing whitespace, file endings, TOML/YAML validity,
-merge-conflict markers, oversized files). A commit is rejected if any
-hook fails.
+merge-conflict markers, oversized files). The commit message must follow
+[Conventional Commits](https://www.conventionalcommits.org)
+(`type(scope): subject`, e.g. `fix: try all rotations at a pivot`).
+A commit is rejected if any hook fails.
 
 Run the same checks by hand:
 
