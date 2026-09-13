@@ -123,6 +123,9 @@ they count as passing until the defect is fixed, at which point they fail
 loudly and must be flipped to regular tests in the same change.
 
 All changes go through pull requests; nothing is pushed to `main` directly.
+CI runs the same gates on every pull request (pre-commit over all files,
+plus the test suite on the oldest and newest supported Python), so the
+checks hold even for a clone that never ran `pre-commit install`.
 
 ## Latest Stable Version
     py3dbp==1.1.2
