@@ -3,6 +3,8 @@
 
 3D Bin Packing implementation based on [this paper](erick_dube_507-034.pdf). The code is based on [gedex](https://github.com/gedex/bp3d) implementation in Go.
 
+This is a maintained fork of [enzoruiz/3dbinpacking](https://github.com/enzoruiz/3dbinpacking) by [BitOps LLC](https://bitops.it). It is maintained as we need it: bug fixes and features land when our own use cases require them.
+
 ## Features
 1. Sorting Bins and Items:
     ```[bigger_first=False/True]``` By default all the bins and items are sorted from the smallest to the biggest, also it can be vice versa, to make the packing in such ordering.
@@ -15,8 +17,10 @@
 ## Install
 
 ```
-pip install py3dbp
+pip install git+https://github.com/BitOps-LLC/3dbinpacking.git
 ```
+
+(`pip install py3dbp` installs the original, unmaintained upstream release from PyPI, not this fork.)
 
 ## Basic Explanation
 
