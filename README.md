@@ -11,8 +11,10 @@ This is a maintained fork of [enzoruiz/3dbinpacking](https://github.com/enzoruiz
 2. Item Distribution:
     - ```[distribute_items=True]``` From a list of bins and items, put the items in the bins that at least one item be in one bin that can be fitted. That is, distribute all the items in all the bins so that they can be contained.
     - ```[distribute_items=False]``` From a list of bins and items, try to put all the items in each bin and in the end it show per bin all the items that was fitted and the items that was not.
-3. Number of decimals:
-    ```[number_of_decimals=X]``` Define the limits of decimals of the inputs and the outputs. By default is 3.
+3. Integer units:
+    Dimensions and weights are expected as integers in a unit of your choice (millimetres and grams work well). All arithmetic is then exact: no floats, no rounding, no tolerance questions. Convert from cm/kg at your application boundary. The upstream `number_of_decimals` Decimal machinery was removed in 2.0.
+4. Usable-dimension slack:
+    ```[usable_factor=1]``` Optional on `Bin`. Real cartons flex and contents shift; a factor below 1 shrinks the usable inner dimensions (floored, so they stay integer), e.g. `usable_factor=0.95` packs against 95% of the nominal inner size. Default 1 uses the dimensions exactly as given.
 
 ## Install
 
@@ -24,9 +26,9 @@ pip install git+https://github.com/BitOps-LLC/3dbinpacking.git
 
 ## Basic Explanation
 
-Bin and Items have the same creation params:
+Bin and Items have the same creation params (integer units recommended, e.g. mm and g):
 ```
-my_bin = Bin(name, width, height, depth, max_weight)
+my_bin = Bin(name, width, height, depth, max_weight, usable_factor=1)
 my_item = Item(name, width, height, depth, weight)
 ```
 Packer have three main functions:
@@ -36,7 +38,7 @@ packer = Packer()           # PACKER DEFINITION
 packer.add_bin(my_bin)      # ADDING BINS TO PACKER
 packer.add_item(my_item)    # ADDING ITEMS TO PACKER
 
-packer.pack()               # PACKING - by default (bigger_first=False, distribute_items=False, number_of_decimals=3)
+packer.pack()               # PACKING - by default (bigger_first=True, distribute_items=False)
 ```
 
 After packing:
@@ -54,23 +56,24 @@ from py3dbp import Packer, Bin, Item
 
 packer = Packer()
 
-packer.add_bin(Bin('small-envelope', 11.5, 6.125, 0.25, 10))
-packer.add_bin(Bin('large-envelope', 15.0, 12.0, 0.75, 15))
-packer.add_bin(Bin('small-box', 8.625, 5.375, 1.625, 70.0))
-packer.add_bin(Bin('medium-box', 11.0, 8.5, 5.5, 70.0))
-packer.add_bin(Bin('medium-2-box', 13.625, 11.875, 3.375, 70.0))
-packer.add_bin(Bin('large-box', 12.0, 12.0, 5.5, 70.0))
-packer.add_bin(Bin('large-2-box', 23.6875, 11.75, 3.0, 70.0))
+# all dimensions in mm, all weights in g
+packer.add_bin(Bin('small-envelope', 292, 155, 6, 4500))
+packer.add_bin(Bin('large-envelope', 381, 304, 19, 6800))
+packer.add_bin(Bin('small-box', 219, 136, 41, 31000))
+packer.add_bin(Bin('medium-box', 279, 215, 139, 31000))
+packer.add_bin(Bin('medium-2-box', 346, 301, 85, 31000))
+packer.add_bin(Bin('large-box', 304, 304, 139, 31000))
+packer.add_bin(Bin('large-2-box', 601, 298, 76, 31000))
 
-packer.add_item(Item('50g [powder 1]', 3.9370, 1.9685, 1.9685, 1))
-packer.add_item(Item('50g [powder 2]', 3.9370, 1.9685, 1.9685, 2))
-packer.add_item(Item('50g [powder 3]', 3.9370, 1.9685, 1.9685, 3))
-packer.add_item(Item('250g [powder 4]', 7.8740, 3.9370, 1.9685, 4))
-packer.add_item(Item('250g [powder 5]', 7.8740, 3.9370, 1.9685, 5))
-packer.add_item(Item('250g [powder 6]', 7.8740, 3.9370, 1.9685, 6))
-packer.add_item(Item('250g [powder 7]', 7.8740, 3.9370, 1.9685, 7))
-packer.add_item(Item('250g [powder 8]', 7.8740, 3.9370, 1.9685, 8))
-packer.add_item(Item('250g [powder 9]', 7.8740, 3.9370, 1.9685, 9))
+packer.add_item(Item('50g [powder 1]', 100, 50, 50, 50))
+packer.add_item(Item('50g [powder 2]', 100, 50, 50, 50))
+packer.add_item(Item('50g [powder 3]', 100, 50, 50, 50))
+packer.add_item(Item('250g [powder 4]', 200, 100, 50, 250))
+packer.add_item(Item('250g [powder 5]', 200, 100, 50, 250))
+packer.add_item(Item('250g [powder 6]', 200, 100, 50, 250))
+packer.add_item(Item('250g [powder 7]', 200, 100, 50, 250))
+packer.add_item(Item('250g [powder 8]', 200, 100, 50, 250))
+packer.add_item(Item('250g [powder 9]', 200, 100, 50, 250))
 
 packer.pack()
 
@@ -127,10 +130,12 @@ CI runs the same gates on every pull request (pre-commit over all files,
 plus the test suite on every supported Python from 3.10 to 3.14), so the
 checks hold even for a clone that never ran `pre-commit install`.
 
-## Latest Stable Version
-    py3dbp==1.1.2
-
 ## Versioning
+- **2.x** (this fork)
+    - Correct rotation search, state handling, and independent per-bin packing.
+    - Default ordering biggest-first (First Fit Decreasing, per the paper).
+    - Integer units, exact arithmetic; Decimal and `number_of_decimals` removed.
+    - Optional `usable_factor` on `Bin` for packing slack.
 - **1.x**
     - Two ways to distribute items (all items in all bins - all items in each bin).
     - Get per bin the fitted and unfitted items.
