@@ -1,13 +1,16 @@
 import copy
+import math
 
-from .auxiliary_methods import intersect, set_to_decimal
+from .auxiliary_methods import intersect
 from .constants import Axis, RotationType
 
-DEFAULT_NUMBER_OF_DECIMALS = 3
 START_POSITION = [0, 0, 0]
 
 
 class Item:
+    """A box to pack. Dimensions and weight are expected in integer units
+    (e.g. millimetres and grams); all arithmetic is then exact."""
+
     def __init__(self, name, width, height, depth, weight):
         self.name = name
         self.width = width
@@ -16,14 +19,6 @@ class Item:
         self.weight = weight
         self.rotation_type = 0
         self.position = list(START_POSITION)
-        self.number_of_decimals = DEFAULT_NUMBER_OF_DECIMALS
-
-    def format_numbers(self, number_of_decimals):
-        self.width = set_to_decimal(self.width, number_of_decimals)
-        self.height = set_to_decimal(self.height, number_of_decimals)
-        self.depth = set_to_decimal(self.depth, number_of_decimals)
-        self.weight = set_to_decimal(self.weight, number_of_decimals)
-        self.number_of_decimals = number_of_decimals
 
     def string(self):
         return (
@@ -32,7 +27,7 @@ class Item:
         )
 
     def get_volume(self):
-        return set_to_decimal(self.width * self.height * self.depth, self.number_of_decimals)
+        return self.width * self.height * self.depth
 
     def get_dimension(self):
         if self.rotation_type == RotationType.RT_WHD:
@@ -54,22 +49,27 @@ class Item:
 
 
 class Bin:
-    def __init__(self, name, width, height, depth, max_weight):
+    """A container to pack into. Dimensions and max_weight are expected in
+    integer units (e.g. millimetres and grams).
+
+    usable_factor shrinks the usable inner dimensions, floored to keep them
+    integer: real cartons flex and contents shift, so a caller can reserve
+    slack (e.g. 0.95) instead of packing against the nominal inner size.
+    The default of 1 uses the dimensions exactly as given.
+    """
+
+    def __init__(self, name, width, height, depth, max_weight, usable_factor=1):
         self.name = name
+        if usable_factor != 1:
+            width = math.floor(width * usable_factor)
+            height = math.floor(height * usable_factor)
+            depth = math.floor(depth * usable_factor)
         self.width = width
         self.height = height
         self.depth = depth
         self.max_weight = max_weight
         self.items = []
         self.unfitted_items = []
-        self.number_of_decimals = DEFAULT_NUMBER_OF_DECIMALS
-
-    def format_numbers(self, number_of_decimals):
-        self.width = set_to_decimal(self.width, number_of_decimals)
-        self.height = set_to_decimal(self.height, number_of_decimals)
-        self.depth = set_to_decimal(self.depth, number_of_decimals)
-        self.max_weight = set_to_decimal(self.max_weight, number_of_decimals)
-        self.number_of_decimals = number_of_decimals
 
     def string(self):
         return (
@@ -78,15 +78,10 @@ class Bin:
         )
 
     def get_volume(self):
-        return set_to_decimal(self.width * self.height * self.depth, self.number_of_decimals)
+        return self.width * self.height * self.depth
 
     def get_total_weight(self):
-        total_weight = 0
-
-        for item in self.items:
-            total_weight += item.weight
-
-        return set_to_decimal(total_weight, self.number_of_decimals)
+        return sum(item.weight for item in self.items)
 
     def put_item(self, item, pivot):
         if self.get_total_weight() + item.weight > self.max_weight:
@@ -96,9 +91,16 @@ class Bin:
         previous_rotation_type = item.rotation_type
         item.position = list(pivot)
 
+        tried = set()
         for rotation_type in RotationType.ALL:
             item.rotation_type = rotation_type
             dimension = item.get_dimension()
+            # Items with equal edges repeat shapes across rotations (a cube
+            # has one distinct shape, not six); skip the duplicates.
+            shape = tuple(dimension)
+            if shape in tried:
+                continue
+            tried.add(shape)
             if (
                 self.width < pivot[0] + dimension[0]
                 or self.height < pivot[1] + dimension[1]
@@ -165,19 +167,10 @@ class Packer:
         if not fitted:
             bin.unfitted_items.append(item)
 
-    def pack(
-        self,
-        bigger_first=True,
-        distribute_items=False,
-        number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
-    ):
+    def pack(self, bigger_first=True, distribute_items=False):
         for bin in self.bins:
             bin.items = []
             bin.unfitted_items = []
-            bin.format_numbers(number_of_decimals)
-
-        for item in self.items:
-            item.format_numbers(number_of_decimals)
 
         self.bins.sort(key=lambda bin: bin.get_volume(), reverse=bigger_first)
         self.items.sort(key=lambda item: item.get_volume(), reverse=bigger_first)

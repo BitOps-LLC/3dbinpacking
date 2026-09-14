@@ -10,6 +10,8 @@ boundary itself is covered rather than assumed.
 import helpers
 import pytest
 
+from py3dbp import Bin, Item
+
 
 def test_item_exactly_the_size_of_the_bin_fits_at_the_origin():
     """Boundary: every dimension is exactly at its limit, which must still fit."""
@@ -186,6 +188,43 @@ def test_bigger_first_controls_which_item_is_placed_when_only_one_fits(bigger_fi
     else:
         assert helpers.placed_names(container) == ["small"]
         assert helpers.unfitted_names(container) == ["large"]
+
+
+def test_integer_inputs_stay_integers_through_packing():
+    """The library does no numeric conversion: integer dimensions in, integer
+    positions and dimensions out. This pins the exact-arithmetic contract of
+    the integer-unit migration (recommended units: millimetres and grams)."""
+    packer = helpers.pack(
+        [("crate", 400, 300, 300, 10_000)],
+        [("box_a", 200, 300, 300, 1_000), ("box_b", 200, 150, 150, 500)],
+    )
+    container = helpers.find_bin(packer, "crate")
+
+    assert container.items, "expected at least one placed item"
+    for item in container.items:
+        for value in (*item.position, *item.get_dimension()):
+            assert isinstance(value, int), f"{item.name}: {value!r} is not an int"
+
+
+def test_usable_factor_shrinks_the_bin_and_floors_to_int():
+    """Bin(usable_factor=0.95) reserves packing slack: a 105 unit inner edge
+    becomes floor(99.75) = 99 usable, so a 100 unit item no longer fits and a
+    99 unit one does. Floor keeps the shrunk dimensions integer and errs on
+    the conservative side."""
+    shrunk = Bin("real_carton", 105, 105, 105, 10_000, usable_factor=0.95)
+
+    assert (shrunk.width, shrunk.height, shrunk.depth) == (99, 99, 99)
+    assert shrunk.put_item(Item("too_big", 100, 50, 50, 1), [0, 0, 0]) is False
+    assert shrunk.put_item(Item("fits", 99, 50, 50, 1), [0, 0, 0]) is True
+
+
+def test_usable_factor_defaults_to_the_exact_dimensions():
+    """Without the factor, the bin packs against its dimensions as given: an
+    item exactly the size of the bin still fits edge to edge."""
+    exact = Bin("nominal_carton", 105, 105, 105, 10_000)
+
+    assert (exact.width, exact.height, exact.depth) == (105, 105, 105)
+    assert exact.put_item(Item("edge_to_edge", 105, 105, 105, 1), [0, 0, 0]) is True
 
 
 def test_default_ordering_is_biggest_first():
