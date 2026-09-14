@@ -1,3 +1,5 @@
+import copy
+
 from .auxiliary_methods import intersect, set_to_decimal
 from .constants import Axis, RotationType
 
@@ -13,7 +15,7 @@ class Item:
         self.depth = depth
         self.weight = weight
         self.rotation_type = 0
-        self.position = START_POSITION
+        self.position = list(START_POSITION)
         self.number_of_decimals = DEFAULT_NUMBER_OF_DECIMALS
 
     def format_numbers(self, number_of_decimals):
@@ -87,12 +89,15 @@ class Bin:
         return set_to_decimal(total_weight, self.number_of_decimals)
 
     def put_item(self, item, pivot):
-        fit = False
-        valid_item_position = item.position
-        item.position = pivot
+        if self.get_total_weight() + item.weight > self.max_weight:
+            return False
 
-        for i in range(0, len(RotationType.ALL)):
-            item.rotation_type = i
+        previous_position = item.position
+        previous_rotation_type = item.rotation_type
+        item.position = list(pivot)
+
+        for rotation_type in RotationType.ALL:
+            item.rotation_type = rotation_type
             dimension = item.get_dimension()
             if (
                 self.width < pivot[0] + dimension[0]
@@ -101,29 +106,15 @@ class Bin:
             ):
                 continue
 
-            fit = True
+            if any(intersect(placed, item) for placed in self.items):
+                continue
 
-            for current_item_in_bin in self.items:
-                if intersect(current_item_in_bin, item):
-                    fit = False
-                    break
+            self.items.append(item)
+            return True
 
-            if fit:
-                if self.get_total_weight() + item.weight > self.max_weight:
-                    fit = False
-                    return fit
-
-                self.items.append(item)
-
-            if not fit:
-                item.position = valid_item_position
-
-            return fit
-
-        if not fit:
-            item.position = valid_item_position
-
-        return fit
+        item.position = previous_position
+        item.rotation_type = previous_rotation_type
+        return False
 
 
 class Packer:
@@ -181,6 +172,8 @@ class Packer:
         number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
     ):
         for bin in self.bins:
+            bin.items = []
+            bin.unfitted_items = []
             bin.format_numbers(number_of_decimals)
 
         for item in self.items:
@@ -190,9 +183,17 @@ class Packer:
         self.items.sort(key=lambda item: item.get_volume(), reverse=bigger_first)
 
         for bin in self.bins:
-            for item in self.items:
-                self.pack_to_bin(bin, item)
+            # Each bin packs its own copies: placements recorded in one bin
+            # must survive the same items being tried against the next bin.
+            clones = [copy.deepcopy(item) for item in self.items]
+
+            for clone in clones:
+                self.pack_to_bin(bin, clone)
 
             if distribute_items:
-                for item in bin.items:
-                    self.items.remove(item)
+                placed = {id(clone) for clone in bin.items}
+                self.items = [
+                    item
+                    for item, clone in zip(self.items, clones, strict=True)
+                    if id(clone) not in placed
+                ]
