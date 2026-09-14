@@ -186,3 +186,19 @@ def test_bigger_first_controls_which_item_is_placed_when_only_one_fits(bigger_fi
     else:
         assert helpers.placed_names(container) == ["small"]
         assert helpers.unfitted_names(container) == ["large"]
+
+
+def test_default_ordering_is_biggest_first():
+    """pack() without the flag behaves as bigger_first=True: big items claim
+    space first and small ones fill what remains (First Fit Decreasing, the
+    ordering the underlying Dube/Kanavathy paper specifies). This default is
+    deliberately flipped relative to upstream py3dbp; this test pins it."""
+    packer = helpers.build_packer(
+        [("single_slot", 4, 4, 4, 100)],
+        [("small", 2, 2, 2, 1), ("large", 4, 4, 4, 1)],
+    )
+    packer.pack()
+    container = helpers.find_bin(packer, "single_slot")
+
+    assert helpers.placed_names(container) == ["large"]
+    assert helpers.unfitted_names(container) == ["small"]

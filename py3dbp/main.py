@@ -167,7 +167,7 @@ class Packer:
 
     def pack(
         self,
-        bigger_first=False,
+        bigger_first=True,
         distribute_items=False,
         number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
     ):
