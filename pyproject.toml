@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "py3dbp"
-version = "2.0.0.dev0"
+version = "2.0.0"
 description = "3D bin packing: heuristic packing of rectangular items into bins, with weight limits"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -54,6 +54,13 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+allow_zero_version = false
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "CHANGELOG.md"
 
 [tool.mypy]
 python_version = "3.10"

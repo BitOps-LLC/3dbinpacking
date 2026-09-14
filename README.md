@@ -131,6 +131,18 @@ CI runs the same gates on every pull request (pre-commit over all files,
 plus the test suite on every supported Python from 3.10 to 3.14), so the
 checks hold even for a clone that never ran `pre-commit install`.
 
+Releases are fully automated by
+[python-semantic-release](https://python-semantic-release.readthedocs.io):
+on every merge to `main` it reads the Conventional Commits since the last
+tag, derives the next version (`fix:` patch, `feat:` minor, `feat!`/
+`BREAKING CHANGE` major), updates `pyproject.toml` and `CHANGELOG.md`,
+tags, and publishes a GitHub release. Never create version tags by hand.
+Pin an install to a release tag:
+
+```
+pip install git+https://github.com/BitOps-LLC/3dbinpacking.git@v2.0.0
+```
+
 ## Versioning
 - **2.x** (this fork)
     - Correct rotation search, state handling, and independent per-bin packing.
