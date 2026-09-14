@@ -1,35 +1,36 @@
 import copy
 import math
+from collections.abc import Sequence
 
 from .auxiliary_methods import intersect
 from .constants import Axis, RotationType
 
-START_POSITION = [0, 0, 0]
+START_POSITION: list[int] = [0, 0, 0]
 
 
 class Item:
     """A box to pack. Dimensions and weight are expected in integer units
     (e.g. millimetres and grams); all arithmetic is then exact."""
 
-    def __init__(self, name, width, height, depth, weight):
+    def __init__(self, name: str, width: int, height: int, depth: int, weight: int) -> None:
         self.name = name
         self.width = width
         self.height = height
         self.depth = depth
         self.weight = weight
-        self.rotation_type = 0
-        self.position = list(START_POSITION)
+        self.rotation_type: int = 0
+        self.position: list[int] = list(START_POSITION)
 
-    def string(self):
+    def string(self) -> str:
         return (
             f"{self.name}({self.width}x{self.height}x{self.depth}, weight: {self.weight})"
             f" pos({self.position}) rt({self.rotation_type}) vol({self.get_volume()})"
         )
 
-    def get_volume(self):
+    def get_volume(self) -> int:
         return self.width * self.height * self.depth
 
-    def get_dimension(self):
+    def get_dimension(self) -> list[int]:
         if self.rotation_type == RotationType.RT_WHD:
             dimension = [self.width, self.height, self.depth]
         elif self.rotation_type == RotationType.RT_HWD:
@@ -58,7 +59,15 @@ class Bin:
     The default of 1 uses the dimensions exactly as given.
     """
 
-    def __init__(self, name, width, height, depth, max_weight, usable_factor=1):
+    def __init__(
+        self,
+        name: str,
+        width: int,
+        height: int,
+        depth: int,
+        max_weight: int,
+        usable_factor: float = 1,
+    ) -> None:
         self.name = name
         if usable_factor != 1:
             width = math.floor(width * usable_factor)
@@ -68,22 +77,22 @@ class Bin:
         self.height = height
         self.depth = depth
         self.max_weight = max_weight
-        self.items = []
-        self.unfitted_items = []
+        self.items: list[Item] = []
+        self.unfitted_items: list[Item] = []
 
-    def string(self):
+    def string(self) -> str:
         return (
             f"{self.name}({self.width}x{self.height}x{self.depth},"
             f" max_weight:{self.max_weight}) vol({self.get_volume()})"
         )
 
-    def get_volume(self):
+    def get_volume(self) -> int:
         return self.width * self.height * self.depth
 
-    def get_total_weight(self):
+    def get_total_weight(self) -> int:
         return sum(item.weight for item in self.items)
 
-    def put_item(self, item, pivot):
+    def put_item(self, item: Item, pivot: Sequence[int]) -> bool:
         if self.get_total_weight() + item.weight > self.max_weight:
             return False
 
@@ -91,7 +100,7 @@ class Bin:
         previous_rotation_type = item.rotation_type
         item.position = list(pivot)
 
-        tried = set()
+        tried: set[tuple[int, ...]] = set()
         for rotation_type in RotationType.ALL:
             item.rotation_type = rotation_type
             dimension = item.get_dimension()
@@ -120,21 +129,20 @@ class Bin:
 
 
 class Packer:
-    def __init__(self):
-        self.bins = []
-        self.items = []
-        self.unfit_items = []
-        self.total_items = 0
+    def __init__(self) -> None:
+        self.bins: list[Bin] = []
+        self.items: list[Item] = []
+        self.unfit_items: list[Item] = []
+        self.total_items: int = 0
 
-    def add_bin(self, bin):
-        return self.bins.append(bin)
+    def add_bin(self, bin: Bin) -> None:
+        self.bins.append(bin)
 
-    def add_item(self, item):
+    def add_item(self, item: Item) -> None:
         self.total_items = len(self.items) + 1
+        self.items.append(item)
 
-        return self.items.append(item)
-
-    def pack_to_bin(self, bin, item):
+    def pack_to_bin(self, bin: Bin, item: Item) -> None:
         fitted = False
 
         if not bin.items:
@@ -167,7 +175,7 @@ class Packer:
         if not fitted:
             bin.unfitted_items.append(item)
 
-    def pack(self, bigger_first=True, distribute_items=False):
+    def pack(self, bigger_first: bool = True, distribute_items: bool = False) -> None:
         for bin in self.bins:
             bin.items = []
             bin.unfitted_items = []

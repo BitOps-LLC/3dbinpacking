@@ -1,7 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from .constants import Axis
 
+if TYPE_CHECKING:
+    from .main import Item
 
-def intersect(item1, item2):
+
+def intersect(item1: Item, item2: Item) -> bool:
     """True when the two items' boxes share volume.
 
     Plain per-axis interval overlap: two boxes intersect exactly when their

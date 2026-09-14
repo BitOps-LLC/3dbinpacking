@@ -42,6 +42,9 @@ dev = [
 [tool.setuptools]
 packages = ["py3dbp"]
 
+[tool.setuptools.package-data]
+py3dbp = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
@@ -55,3 +58,4 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 [tool.mypy]
 python_version = "3.10"
 strict = true
+files = ["py3dbp"]
