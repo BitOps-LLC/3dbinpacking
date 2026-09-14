@@ -1,17 +1,17 @@
 class RotationType:
-    RT_WHD = 0
-    RT_HWD = 1
-    RT_HDW = 2
-    RT_DHW = 3
-    RT_DWH = 4
-    RT_WDH = 5
+    RT_WHD: int = 0
+    RT_HWD: int = 1
+    RT_HDW: int = 2
+    RT_DHW: int = 3
+    RT_DWH: int = 4
+    RT_WDH: int = 5
 
-    ALL = [RT_WHD, RT_HWD, RT_HDW, RT_DHW, RT_DWH, RT_WDH]
+    ALL: list[int] = [RT_WHD, RT_HWD, RT_HDW, RT_DHW, RT_DWH, RT_WDH]
 
 
 class Axis:
-    WIDTH = 0
-    HEIGHT = 1
-    DEPTH = 2
+    WIDTH: int = 0
+    HEIGHT: int = 1
+    DEPTH: int = 2
 
-    ALL = [WIDTH, HEIGHT, DEPTH]
+    ALL: list[int] = [WIDTH, HEIGHT, DEPTH]
