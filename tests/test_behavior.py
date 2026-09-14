@@ -7,9 +7,8 @@ a limit, the partner case one unit either side of it is included, so the
 boundary itself is covered rather than assumed.
 """
 
-import pytest
-
 import helpers
+import pytest
 
 
 def test_item_exactly_the_size_of_the_bin_fits_at_the_origin():

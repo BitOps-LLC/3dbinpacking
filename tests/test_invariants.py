@@ -15,9 +15,8 @@ separate matter and is covered in test_known_bugs.py, because the library
 currently corrupts placements when it does that.
 """
 
-import pytest
-
 import helpers
+import pytest
 
 SCENARIOS = {
     # One item in a bin many times its size: the simplest possible placement.
@@ -34,7 +33,7 @@ SCENARIOS = {
     # hardest: 12 cubes into a bin with room for 27.
     "many_identical_items": (
         ("grid", 6, 6, 6, 100),
-        [("cube_%02d" % index, 2, 2, 2, 1) for index in range(12)],
+        [(f"cube_{index:02d}", 2, 2, 2, 1) for index in range(12)],
     ),
     # Mixed shapes, including a flat one and a long one, so rotation matters.
     "mixed_sizes": (
@@ -51,13 +50,13 @@ SCENARIOS = {
     # More volume offered than the bin has: most items must end up unfitted.
     "more_items_than_space": (
         ("tight", 4, 4, 4, 100),
-        [("block_%d" % index, 3, 3, 3, 1) for index in range(5)],
+        [(f"block_{index}", 3, 3, 3, 1) for index in range(5)],
     ),
     # Geometry is never the constraint here, weight always is. The limit is an
     # exact multiple of the item weight, so the cutoff lands on a boundary.
     "weight_constrained": (
         ("light", 10, 10, 10, 6),
-        [("weight_%d" % index, 2, 2, 2, 2) for index in range(5)],
+        [(f"weight_{index}", 2, 2, 2, 2) for index in range(5)],
     ),
     # Nothing fits at all: the empty result is its own equivalence class.
     "nothing_fits": (
@@ -86,8 +85,7 @@ def test_pack_does_not_lose_or_duplicate_items(scenario, bigger_first):
     bin_spec, item_specs = SCENARIOS[scenario]
     packer = helpers.pack([bin_spec], item_specs, bigger_first=bigger_first)
 
-    assert sorted(item.name for item in packer.items) == sorted(
-        spec[0] for spec in item_specs)
+    assert sorted(item.name for item in packer.items) == sorted(spec[0] for spec in item_specs)
 
 
 def test_overlap_oracle_detects_a_real_overlap():

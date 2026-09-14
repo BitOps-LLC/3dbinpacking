@@ -8,11 +8,10 @@ these assertions. If one of them starts failing as XPASS, delete the marker and
 keep the assertion.
 """
 
+import helpers
 import pytest
 
 from py3dbp import Bin, Item
-
-import helpers
 
 
 @pytest.mark.xfail(
@@ -45,8 +44,8 @@ def test_remaining_rotations_are_tried_after_a_collision():
     container = helpers.find_bin(packer, "crate")
 
     assert sorted(helpers.placed_names(container)) == ["cube", "slab_a", "slab_b"], (
-        "expected all three items to fit, got placed=%s unfitted=%s"
-        % (helpers.placed_names(container), helpers.unfitted_names(container))
+        f"expected all three items to fit, got placed={helpers.placed_names(container)}"
+        f" unfitted={helpers.unfitted_names(container)}"
     )
     helpers.assert_bin_invariants(container, packer.items)
 

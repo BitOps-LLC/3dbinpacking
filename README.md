@@ -90,6 +90,43 @@ for b in packer.bins:
 
 ```
 
+## Development
+
+Set up a working environment with the dev extras and the git hooks:
+
+```
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]" pre-commit
+pre-commit install
+```
+
+Every commit then runs [pre-commit](https://pre-commit.com) automatically:
+ruff (lint with autofix, plus formatting), the pytest suite, and basic
+hygiene checks (trailing whitespace, file endings, TOML/YAML validity,
+merge-conflict markers, oversized files). The commit message must follow
+[Conventional Commits](https://www.conventionalcommits.org)
+(`type(scope): subject`, e.g. `fix: try all rotations at a pivot`).
+A commit is rejected if any hook fails.
+
+Run the same checks by hand:
+
+```
+pre-commit run --all-files   # everything, exactly as on commit
+ruff check .                 # lint only
+ruff format .                # format only
+pytest                       # test suite only
+```
+
+The suite contains strict `xfail` tests documenting known upstream defects;
+they count as passing until the defect is fixed, at which point they fail
+loudly and must be flipped to regular tests in the same change.
+
+All changes go through pull requests; nothing is pushed to `main` directly.
+CI runs the same gates on every pull request (pre-commit over all files,
+plus the test suite on every supported Python from 3.10 to 3.14), so the
+checks hold even for a clone that never ran `pre-commit install`.
+
 ## Latest Stable Version
     py3dbp==1.1.2
 
